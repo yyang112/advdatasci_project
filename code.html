@@ -746,8 +746,9 @@ data &lt;- data[-id,]</code></pre>
 </div>
 <div id="logistic-regression" class="section level2">
 <h2>3.2 Logistic regression</h2>
-<p>10 fold CV for all 84 features and select 20 significant features. Error rate is 0.18 for all features and 0.15 for significant features.</p>
-<pre class="r"><code>fit.logit &lt;- glm(y~.,data = data,family = &quot;binomial&quot;)</code></pre>
+<p>10 fold CV for all 84 features and select 20 significant features. MSE is 0.18 for all features and 0.15 for significant features. Accuracy is 78% for all features and 83% for selected features.</p>
+<pre class="r"><code>#full data cv
+fit.logit &lt;- glm(y~.,data = data,family = &quot;binomial&quot;)</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>summary(fit.logit)</code></pre>
 <pre><code>## 
@@ -882,7 +883,8 @@ cv.logit &lt;- cv.glm(data,fit.logit,K=10)$delta</code></pre>
 ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>cv.logit</code></pre>
 <pre><code>## [1] 0.1807030 0.1768848</code></pre>
-<pre class="r"><code>data.select &lt;- data[,c(&quot;y&quot;,&quot;popcrave&quot;,&quot;shit&quot;,&quot;bitch&quot;,&quot;thank&quot;,&quot;ass&quot;,&quot;music&quot;,&quot;hope&quot;,&quot;dietcoke&quot;,&quot;black&quot;,&quot;white&quot;,&quot;beautiful&quot;,&quot;hell&quot;,&quot;legend&quot;,&quot;miss&quot;,&quot;taylornation13&quot;,&quot;taylorswift&quot;,&quot;ariastaylorswift&quot;,&quot;lang&quot;,&quot;ts6&quot;,&quot;awesome&quot;)]
+<pre class="r"><code>#select data cv
+data.select &lt;- data[,c(&quot;y&quot;,&quot;popcrave&quot;,&quot;shit&quot;,&quot;bitch&quot;,&quot;thank&quot;,&quot;ass&quot;,&quot;music&quot;,&quot;hope&quot;,&quot;dietcoke&quot;,&quot;black&quot;,&quot;white&quot;,&quot;beautiful&quot;,&quot;hell&quot;,&quot;legend&quot;,&quot;miss&quot;,&quot;taylornation13&quot;,&quot;taylorswift&quot;,&quot;ariastaylorswift&quot;,&quot;lang&quot;,&quot;ts6&quot;,&quot;awesome&quot;)]
 fit.logit.select &lt;- glm(y~.,data = data.select,family = &quot;binomial&quot;)</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>set.seed(1)
@@ -908,6 +910,73 @@ cv.logit.select &lt;- cv.glm(data.select,fit.logit.select,K=10)$delta</code></pr
 ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>cv.logit.select</code></pre>
 <pre><code>## [1] 0.1480865 0.1473898</code></pre>
+<pre class="r"><code>#full data error rate
+accuracy.full &lt;- NULL
+for (i in 1:10)
+{
+        test.id &lt;- seq(78*(i-1)+1,78*i)
+        fit.logit.train &lt;- glm(y~.,data = data,family = &quot;binomial&quot;,subset = -test.id)
+        y.prob &lt;- predict(fit.logit.train,data[test.id,],type = &quot;response&quot;)
+        y.true &lt;- y[test.id]
+        y.predict &lt;- numeric(length(test.id))
+        y.predict[which(y.prob&gt;=0.5)] &lt;-1
+        accuracy.full[i] &lt;- sum(y.true==y.predict)/length(test.id)
+}</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type =
+## ifelse(type == : prediction from a rank-deficient fit may be misleading</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>mean(accuracy.full)</code></pre>
+<pre><code>## [1] 0.7012821</code></pre>
+<pre class="r"><code>#select data error rate
+accuracy.select &lt;- NULL
+for (i in 1:10)
+{
+        test.id &lt;- seq(78*(i-1)+1,78*i)
+        fit.logit.train &lt;- glm(y~.,data = data.select,family = &quot;binomial&quot;,subset = -test.id)
+        y.prob &lt;- predict(fit.logit.train,data.select[test.id,],type = &quot;response&quot;)
+        y.true &lt;- y[test.id]
+        y.predict &lt;- numeric(length(test.id))
+        y.predict[which(y.prob&gt;=0.5)] &lt;-1
+        accuracy.select[i] &lt;- sum(y.true==y.predict)/length(test.id)
+}</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>mean(accuracy.select)</code></pre>
+<pre><code>## [1] 0.7217949</code></pre>
 </div>
 
 

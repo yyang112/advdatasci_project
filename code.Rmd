@@ -355,19 +355,49 @@ data <- data[-id,]
 
 ##3.2 Logistic regression
 
-10 fold CV for all 84 features and select 20 significant features. Error rate is 0.18 for all features and 0.15 for significant features.
+10 fold CV for all 84 features and select 20 significant features. MSE is 0.18 for all features and 0.15 for significant features. Accuracy is 78\% for all features and 83\% for selected features.
+
 ```{r logit}
+#full data cv
 fit.logit <- glm(y~.,data = data,family = "binomial")
 summary(fit.logit)
 set.seed(1)
 cv.logit <- cv.glm(data,fit.logit,K=10)$delta
 cv.logit
-
+#select data cv
 data.select <- data[,c("y","popcrave","shit","bitch","thank","ass","music","hope","dietcoke","black","white","beautiful","hell","legend","miss","taylornation13","taylorswift","ariastaylorswift","lang","ts6","awesome")]
 fit.logit.select <- glm(y~.,data = data.select,family = "binomial")
 set.seed(1)
 cv.logit.select <- cv.glm(data.select,fit.logit.select,K=10)$delta
 cv.logit.select
+#full data error rate
+accuracy.full <- NULL
+for (i in 1:10)
+{
+        test.id <- seq(78*(i-1)+1,78*i)
+        fit.logit.train <- glm(y~.,data = data,family = "binomial",subset = -test.id)
+        y.prob <- predict(fit.logit.train,data[test.id,],type = "response")
+        y.true <- y[test.id]
+        y.predict <- numeric(length(test.id))
+        y.predict[which(y.prob>=0.5)] <-1
+        accuracy.full[i] <- sum(y.true==y.predict)/length(test.id)
+}
+mean(accuracy.full)
+
+#select data error rate
+accuracy.select <- NULL
+for (i in 1:10)
+{
+        test.id <- seq(78*(i-1)+1,78*i)
+        fit.logit.train <- glm(y~.,data = data.select,family = "binomial",subset = -test.id)
+        y.prob <- predict(fit.logit.train,data.select[test.id,],type = "response")
+        y.true <- y[test.id]
+        y.predict <- numeric(length(test.id))
+        y.predict[which(y.prob>=0.5)] <-1
+        accuracy.select[i] <- sum(y.true==y.predict)/length(test.id)
+}
+mean(accuracy.select)
+
 ```
 
 
