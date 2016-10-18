@@ -1,0 +1,371 @@
+##### 140.711 Advanced Data Science Project
+####Yuchen Yang
+
+###0 Preliminary
+##0.0 Set up
+Require libraries and set up Twitter API.
+```{r set up}
+library(twitteR)
+library(RCurl)
+library(stringr)
+library(tm)
+library(wordcloud)
+library(dplyr)
+library(sentiment)
+library(ggplot2)
+library(boot)
+library(e1071)
+library(knitr)
+library(SnowballC)
+
+#output setup
+opts_chunk$set(cache=TRUE)
+#API setup
+consumer_key <- 'E4k6sWu82oC7z9S13LhV424Iy'
+consumer_secret <- 'dOT6Bzykf5WMPf8krcUZCfqCRZFYCbpKbJ7LtPUTZpyXXjhtGN'
+access_token <- '3838169536-ICB596gXntmZBc9jxzWH8brtRBsuHfORX5Ev4z4'
+access_secret <- 'OpFZh6flRX5pMT23BzMyKyc32QLdcXqltHo1Q3pSuyLoC'
+setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+
+```
+
+2 functions I write.
+
+```{r functions}
+MyClean <- function(status){#character list
+        status.clean <- gsub("(f|ht)tp(s?)://(.*?)([ ]|$)", "", status) #remove url
+        status.clean <- gsub("&amp;", " ", status.clean)
+        status.clean <- gsub("RT ", "", status.clean)
+        status.clean <- gsub("[[:punct:]]","",status.clean)
+        status.clean <- gsub("\n","",status.clean)
+        status.clean <-iconv(status.clean,"ASCII", "UTF-8", sub="") #clean emoji
+        status.clean
+}
+
+MyCount <- function(status.clean,word){#character list,character,search count of word in status.clean
+        search.result <- gregexpr(word,status.clean) #return a list of matched starting positions
+        search.result <- sapply(search.result, function(x) x!=-1)
+        search.result <- sapply(search.result, sum)
+        search.result
+}
+
+```
+
+
+##0.1 Get Potential trolls/fans
+Use "mybadwords" dictionary to search for potential troll tweets and fan tweets. Each line is a tweet for a person. The first word is the username and the rest is the content of the tweet. Save the file as "mean.txt" and "love.txt" for trolls and fans seperately.
+
+```{r get potential,eval=FALSE}
+#not run this chuck
+kCelebrity <- "taylorswift13"
+kDictionary.1 <- as.vector(readLines("mybadwords"))
+
+#search for potential mean tweets
+for (i in 1:length(kDictionary.1))
+{
+        kWord <- paste(kCelebrity,"+",kDictionary.1[i])
+        status <- searchTwitter(kWord,lang="en",n=300,resultType = "recent")
+        sapply(status, function(x) write.table(paste(x$screenName,x$text,sep=' '),"./data/mean.txt",row.names = FALSE,col.names = FALSE,append = TRUE))
+}
+#search for potential fan tweets
+status <- strip_retweets(searchTwitter("taylorswift13 + love",lang="en",n=3000,resultType = "recent"))
+sapply(status, function(x) write.table(paste(x$screenName,x$text,sep=' '),"./data/love.txt",row.names = FALSE,col.names = FALSE,append = TRUE))
+
+```
+
+##0.2 Manually select true troll/fan tweets and get true troll/fan usernames
+Manually delete tweets that are not trolls in "mean.txt" file and tweets that are not fans in "love.txt" file. Read in the modified file and get the first word as usernames for true trolls and fans. Save the usernames for trolls as "usernames_mean" and "usernames_fan" for fans.
+
+```{r manual select,eval=FALSE}
+mean <- gsub("\"","",readLines("./data/mean.txt"))
+mean.users <- unique(word(mean,1))
+love <- gsub("\"","",readLines("./data/love.txt"))
+fan.users <- unique(word(love,1))
+write.table(mean.users,"./data/usernames_mean.txt",sep = "\n",row.names = FALSE,col.names = FALSE,append = T)
+write.table(fan.users,"./data/usernames_fan.txt",sep = "\n",row.names = FALSE,col.names = FALSE,append = T)
+
+```
+
+##0.3 Search for tweets for each of the troll/fan. 
+Search for most recent n=200 tweets for each identified troll/fan. There is rate limit for this search so wait for 15 minutes if reaching the rate limit. Also some accounts are private, so I manually delete them in the "usernames_mean.txt" and "usernames_fan.txt". For each tweet returned, use MyClean() function to get a clean version of the text(i.e. remove URL and hex code emoji). Save the file as "status_mean_all.txt" and "status_mean_clean.txt" for raw and clean version for trolls. Similarly for fans. In each file, each username is followed by tweets of that user.
+
+```{r get tweets,eval=FALSE}
+#not run
+for (i in i:n.mean){
+                name <- mean.users[i]
+                status.all <- userTimeline(name,n=200)
+                status.all.text <- sapply(status.all,function(x) x$getText())
+                status.all.text.clean <- MyClean(status.all.text)
+                write.table(name,"./data/status_mean_all.txt",row.names = FALSE, col.names = FALSE,append=TRUE)
+                write.table(status.all.text,"./data/status_mean_all.txt",col.names = FALSE,append=TRUE)
+                write.table(name,"./data/status_mean_clean.txt",row.names = FALSE, col.names = FALSE,append=TRUE)
+                write.table(status.all.text.clean,"./data/status_mean_clean.txt",col.names = FALSE, append=TRUE)
+}
+
+for (j in j:n.fan){
+        name <- fan.users[j]
+        status.all <- userTimeline(name,n=200)
+        status.all.text <- sapply(status.all,function(x) x$getText())
+        status.all.text.clean <- MyClean(status.all.text)
+        write.table(name,"./data/status_fan_all.txt",row.names = FALSE, col.names = FALSE,append=TRUE)
+        write.table(status.all.text,"./data/status_fan_all.txt",col.names = FALSE,append=TRUE)
+        write.table(name,"./data/status_fan_clean.txt",row.names = FALSE, col.names = FALSE,append=TRUE)
+        write.table(status.all.text.clean,"./data/status_fan_clean.txt",col.names = FALSE, append=TRUE)
+}
+
+```
+
+###1 Raw Data
+We have modified usernames "usernames_mean.txt" for trolls and "usernames_fan.txt" for fans (deleting those private accounts). Also for each of these users, we have returned most recent 200 tweets, "status_mean_clean.txt" for trolls and "status_fan_clean.txt" for fans. Check out these data. There are 290 mean users and 510 fan users. Totally there are 
+25,915 tweets for mean users and 41,244 tweets for fan users.
+
+```{r raw data}
+#mean user
+mean.users <- as.vector(read.table("./data/usernames_mean.txt")[,1])
+head(mean.users)
+n.mean <- length((mean.users))
+n.mean
+#fan user
+fan.users <- as.vector(read.table("./data/usernames_fan.txt")[,1])
+head(fan.users)
+n.fan <- length((fan.users))
+n.fan
+#mean tweets
+text.mean <- readLines("./data/status_mean_clean.txt")
+text.mean <- gsub("\"","",text.mean)
+text.mean <- gsub("^[0-9](.*?)[ ]","",text.mean)
+head(text.mean)
+N.mean <- length(text.mean)-n.mean
+N.mean
+#fan tweets
+text.fan <- readLines("./data/status_fan_clean.txt")
+text.fan <- gsub("\"","",text.fan)
+text.fan <- gsub("^[0-9](.*?)[ ]","",text.fan)
+head(text.fan)
+N.fan <- length(text.fan)-n.fan
+N.fan
+```
+
+###2 EDA
+
+##2.0 Summary statistics
+Reconstruct a list object from the raw data where each element of the list are tweets from each person. I first find the corresponding line of each username and find their corresponding tweets to construct the list. Store the list as "tweet.mean.list" and "tweet.fan.list". Count number of tweets for each person and plot the distribution of number of tweets for trolls and fans. There are on average 89 tweets for mean users and 81 tweets for fan users. Trolls tend to have more tweets than fans.
+
+```{r tweet distribution}
+#mean list
+cut.mean <- sapply(mean.users,function(x) which(text.mean==x))
+cut.mean <- sapply(cut.mean, function(x) unlist(x)[1])
+cut.mean[n.mean+1] <- length(text.mean)+1
+tweet.mean.list <- NULL
+for (i in 1:n.mean){
+        tweet.mean.list[[i]] <- text.mean[(cut.mean[i]+1):(cut.mean[i+1]-1)]
+}
+tweet.mean.list[[1]][1:10]
+
+#fan list
+cut.fan <- sapply(fan.users,function(x) which(text.fan==x))
+cut.fan <- sapply(cut.fan, function(x) unlist(x)[1])
+cut.fan[n.fan+1] <- length(text.fan)+1
+tweet.fan.list <- NULL
+for (i in 1:n.fan){
+        tweet.fan.list[[i]] <- text.fan[(cut.fan[i]+1):(cut.fan[i+1]-1)]
+}
+tweet.fan.list[[1]][1:10]
+
+#plot distribution of number of tweets
+count.tweet.mean <- sapply(tweet.mean.list, function(x) length(x))
+count.tweet.mean.avg <- mean(count.tweet.mean)
+count.tweet.mean.avg
+count.tweet.fan <- sapply(tweet.fan.list, function(x) length(x))
+count.tweet.fan.avg <- mean(count.tweet.fan)
+count.tweet.fan.avg
+count.tweet <- data.frame(count = c(count.tweet.mean,count.tweet.fan), user = c(rep("mean_users",n.mean),rep("fan_users",n.fan)))
+
+ggplot(count.tweet,aes(x=count,group=user,colour=user)) + 
+        geom_density() +
+        labs(title = "Distribution of number of tweets") + 
+        theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+##2.1 Wordcloud
+
+Paste all tweets for troll/fan as a single text and construct the term-document matrix to count the number of occurance of each word. Then manually select words from the top 200 to construct the wordcloud.
+
+```{r wordcloud}
+text.mean.wordcloud <- readLines("./data/status_mean_clean.txt")
+text.mean.wordcloud <- gsub("[[:punct:]]","",text.mean.wordcloud)
+text.mean.wordcloud <- paste (text.mean.wordcloud, sep = " ", collapse = ' ')
+text.mean.wordcloud <- wordStem(text.mean.wordcloud)
+text.mean.corpus <- Corpus(VectorSource(text.mean.wordcloud))
+text.mean.corpus <- tm_map(text.mean.corpus,content_transformer(tolower))
+text.mean.corpus <- tm_map(text.mean.corpus,removeWords,stopwords("en"))
+text.mean.corpus <- tm_map(text.mean.corpus,removeWords,"taylorswift13")
+
+matrix.mean <- TermDocumentMatrix(text.mean.corpus)
+freq.word <- as.matrix(matrix.mean)
+freq.word.order <- freq.word[order(freq.word,decreasing = TRUE),1]
+words.mean <- names(freq.word.order[1:200])
+select <- c(1,2,3,4,5,6,7,8,9,11,12,13,14,16,18,21,23,29,34,35,44,45,53,59,63,67,73,74,22,20,82,81,93,91,90,27,76,56,85,86,36,38,102,104,106,107,110,112,115,116,117,119,121,122,123,126,127,128,129,133,134,135,136,137,138,140,141,142,143,145,147,150,151,152,153,154,157,159,160,161,162,163,164,166,167,168,170,173,175,176,181,182,184,186,187,188,189,190,195,69,39,97,42,98,193,89,68,109,48,79,57,99,120,62,125,47,24,144,40,114,78,17,149,31)
+words.mean <- names(freq.word.order[1:200][-select])
+words.mean
+freq.mean <- freq.word.order[1:200][-select]
+wordcloud(words.mean,freq.mean,random.order = FALSE,colors=brewer.pal(8, "Dark2"),scale=c(2,0.8))
+
+text.fan.wordcloud <- readLines("./data/status_fan_clean.txt")
+text.fan.wordcloud <- gsub("[[:punct:]]","",text.fan.wordcloud)
+text.fan.wordcloud <- paste (text.fan.wordcloud, sep = " ", collapse = ' ')
+text.fan.wordcloud <- wordStem(text.fan.wordcloud)
+text.fan.corpus <- Corpus(VectorSource(text.fan.wordcloud))
+text.fan.corpus <- tm_map(text.fan.corpus,content_transformer(tolower))
+text.fan.corpus <- tm_map(text.fan.corpus,removeWords,stopwords("en"))
+text.fan.corpus <- tm_map(text.fan.corpus,removeWords,"taylorswift13")
+
+matrix.fan <- TermDocumentMatrix(text.fan.corpus)
+freq.word.fan <- as.matrix(matrix.fan)
+freq.word.fan.order <- freq.word.fan[order(freq.word.fan,decreasing = TRUE),1]
+words.fan <- names(freq.word.fan.order[1:200])
+select.fan <- c(1,2,3,4,5,6,7,8,9,10,11,12,16,17,18,19,20,21,22,23,27,28,30,35,36,39,44,47,50,62,66,68,67,69,70,71,75,76,79,80,84,86,88,89,91,94,97,98,99,100,103,104,105,108,109,112,113,115,117,120,122,123,125,127,128,133,134,135,139,141,146,147,148,151,153,154,155,157,158,160,161,162,166,167,170,172,175,176,177,180,182,184,185,187,188,189,190,191,193,194,197,198,199,200,26,38,119,52,143,25,124,111,145,59,144)
+words.fan <- names(freq.word.fan.order[1:200][-select.fan])
+words.fan
+freq.fan <- freq.word.fan.order[1:200][-select.fan]
+wordcloud(words.fan,freq.fan,random.order = FALSE,colors=brewer.pal(8, "Dark2"),scale=c(2,0.7))
+
+```
+
+##2.2 Sentimental Analysis
+We conduct 3 levels of sentiment analysis:
+This chuck takes a lot of time to run. Cache the result.
+```{r sentiment}
+###tweet level
+sentiment.mean <- classify_polarity(unlist(tweet.mean.list), algorithm="bayes")[,4]
+sentiment.fan <- classify_polarity(unlist(tweet.fan.list), algorithm="bayes")[,4]
+#data frame
+sentiment.tweet <- data.frame(emotion = as.factor(rep(c("negative","neutural","positive"),2)), percentage = c(length(which(sentiment.mean=="negative"))/N.mean,length(which(sentiment.mean=="neutral"))/N.mean,length(which(sentiment.mean=="positive"))/N.mean,length(which(sentiment.fan=="negative"))/N.fan,length(which(sentiment.fan=="neutral"))/N.fan,length(which(sentiment.fan=="positive"))/N.fan),class = as.factor(c(rep("mean_user",3),rep("fan_user",3))))
+sentiment.tweet
+#plot
+ggplot(sentiment.tweet,aes(x=emotion,y=percentage,group=class,fill=class)) + 
+        geom_bar(aes(colour = class),stat="identity",position="dodge") +
+        labs(title = "Sentiment Analysis of Tweets") + 
+        theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+###individual level
+#paste data
+tweet.mean <- NULL
+for (i in 1:n.mean){
+        tweet.mean[i] <- paste(tweet.mean.list[[i]],sep = " ", collapse = ' ')
+}
+tweet.fan <- NULL
+for (i in 1:n.fan){
+        tweet.fan[i] <- paste(tweet.fan.list[[i]],sep = " ", collapse = ' ')
+}
+sentiment.mean.person <- classify_polarity(tweet.mean, algorithm="bayes")[,4]
+sentiment.fan.person <- classify_polarity(tweet.fan, algorithm="bayes")[,4]
+#data frame
+sentiment.individual <- data.frame(emotion = as.factor(rep(c("negative","neutural","positive"),2)), percentage = c(length(which(sentiment.mean.person=="negative"))/n.mean,length(which(sentiment.mean.person=="neutral"))/n.mean,length(which(sentiment.mean.person=="positive"))/n.mean,length(which(sentiment.fan.person=="negative"))/n.fan,length(which(sentiment.fan.person=="neutral"))/n.fan,length(which(sentiment.fan.person=="positive"))/n.fan),class = as.factor(c(rep("mean_user",3),rep("fan_user",3))))
+sentiment.individual
+#plot
+ggplot(sentiment.individual,aes(x=emotion,y=percentage,group=class,fill=class)) + 
+        geom_bar(aes(colour = class),stat="identity",position="dodge") +
+        labs(title = "Sentiment Analysis of Individuals") + 
+        theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+###percentage distribution of indivudual
+sentiment.mean.matrix <- matrix(nrow = n.mean,ncol = 3)
+sentiment.fan.matrix <- matrix(nrow = n.fan,ncol = 3)
+for (i in 1:n.mean){
+        result <- classify_polarity(tweet.mean.list[[i]], algorithm="bayes")[,4]
+        n <- length(tweet.mean.list[[i]])
+        sentiment.mean.matrix[i,1] <- length(which(result=="positive"))/n
+        sentiment.mean.matrix[i,2] <- length(which(result=="neutral"))/n
+        sentiment.mean.matrix[i,3] <- length(which(result=="negative"))/n
+}
+for (i in 1:n.fan){
+        result <- classify_polarity(tweet.fan.list[[i]], algorithm="bayes")[,4]
+        n <- length(tweet.fan.list[[i]])
+        sentiment.fan.matrix[i,1] <- length(which(result=="positive"))/n
+        sentiment.fan.matrix[i,2] <- length(which(result=="neutral"))/n
+        sentiment.fan.matrix[i,3] <- length(which(result=="negative"))/n
+}
+#data frame
+percentage.dist <- data.frame(percentage = c(sentiment.mean.matrix[,1],sentiment.mean.matrix[,3],sentiment.fan.matrix[,1],sentiment.fan.matrix[,3]),class = c(rep("mean.positive",n.mean),rep("mean.negative",n.mean),rep("fan.positive",n.fan),rep("fan.negative",n.fan)))
+head(percentage.dist)
+#plot
+ggplot(percentage.dist,aes(percentage,colour = class)) + geom_density() + 
+        labs(title = "Sentimental Percentage Distribution of Individuals") + 
+        theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+###3 The model
+##3.1 Feature selection
+Collapse all tweets for trolls as a single text and all tweets for fans as another single text. Compute the frenquency for each appearing word. If word A appears in one text but not the other, set the freqency of A in the other text as 0. Rank all words by descending order of the frenquency difference. Choose top 200 words, intersect with words selected to construct the wordcloud. 84 words are selected as feature words.
+
+```{r feature selection}
+#compute word frenquency
+word.count.mean <- sum(freq.word.order)
+freq.word.order <- freq.word.order/word.count.mean
+freq.word.order <- data.frame(word = names(freq.word.order), freq = freq.word.order)
+word.count.fan <- sum(freq.word.fan.order)
+freq.word.fan.order <- freq.word.fan.order/word.count.fan
+freq.word.fan.order <- data.frame(word = names(freq.word.fan.order),freq = freq.word.fan.order)
+#compute frequency difference
+word.all <- full_join(freq.word.order,freq.word.fan.order, by = "word")
+head(word.all)
+word.all[is.na(word.all)] <- 0
+word.compare <- word.all %>% 
+        mutate(diff = freq.x - freq.y, abs = abs(freq.x - freq.y)) %>% 
+        arrange(desc(abs)) %>%
+        select(word,abs)
+head(word.compare)
+#select feature
+manual.select <- union(words.mean,words.fan)
+common <- intersect(manual.select,word.compare[1:200,1])
+common
+
+```
+
+
+##3.2 Convert to vector input
+Foe each person, construct a 84 dimensional vector, corresponding to the frequencies of the 84 feature words in this person's tweets.
+
+```{r data convert}
+tweet.mean <- gsub("[[:punct:]]","",tweet.mean)
+tweet.mean <- tolower(tweet.mean)
+tweet.fan <- gsub("[[:punct:]]","",tweet.fan)
+tweet.fan <- tolower(tweet.fan)
+dictionary_model <- as.vector(read.table("dictionary_model")[,1])
+#count the number of dictionary words for each person
+train.mean <- sapply(dictionary_model, function(x) MyCount(tweet.mean,x))
+train.fan <- sapply(dictionary_model, function(x) MyCount(tweet.fan,x))
+#count the number of total words for each person
+count.mean <- as.numeric(lapply(tweet.mean,function(x) length(strsplit(x,' ')[[1]])))
+count.fan <-  as.numeric(lapply(tweet.fan,function(x) length(strsplit(x,' ')[[1]])))
+#construct input data
+train.mean <- train.mean/count.mean 
+train.fan <- train.fan/count.fan
+y <- c(rep(1,n.mean),rep(0,n.fan))
+data <- data.frame(y = y, rbind(train.mean,train.fan))
+head(data)
+
+```
+
+##3.2 Logistic regression
+
+10 fold CV for all 84 features and select 20 significant features. Error rate is 0.18 for all features and 0.15 for significant features.
+```{r logit}
+fit.logit <- glm(y~.,data = data,family = "binomial")
+summary(fit.logit)
+set.seed(1)
+cv.logit <- cv.glm(data,fit.logit,K=10)$delta
+cv.logit
+
+data.select <- data[,c("y","popcrave","shit","bitch","thank","ass","music","hope","dietcoke","black","white","beautiful","hell","legend","miss","taylornation13","taylorswift","ariastaylorswift","lang","ts6","awesome")]
+fit.logit.select <- glm(y~.,data = data.select,family = "binomial")
+set.seed(1)
+cv.logit.select <- cv.glm(data.select,fit.logit.select,K=10)$delta
+cv.logit.select
+```
+
+
+
