@@ -347,6 +347,9 @@ train.fan <- train.fan/count.fan
 y <- c(rep(1,n.mean),rep(0,n.fan))
 data <- data.frame(y = y, rbind(train.mean,train.fan))
 head(data)
+#delete rows with all 0s
+id <- which(apply(data[,-1],1,function(x) all(x==0))==TRUE)
+data <- data[-id,]
 
 ```
 

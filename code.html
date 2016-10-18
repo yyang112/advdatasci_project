@@ -740,6 +740,9 @@ head(data)</code></pre>
 ## 4 0.000000000 0.0000000000   0 0.0000000000           0 0.0000000000
 ## 5 0.000000000 0.0006269592   0 0.0000000000           0 0.0003134796
 ## 6 0.001696065 0.0000000000   0 0.0000000000           0 0.0000000000</code></pre>
+<pre class="r"><code>#delete rows with all 0s
+id &lt;- which(apply(data[,-1],1,function(x) all(x==0))==TRUE)
+data &lt;- data[-id,]</code></pre>
 </div>
 <div id="logistic-regression" class="section level2">
 <h2>3.2 Logistic regression</h2>
@@ -753,121 +756,109 @@ head(data)</code></pre>
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -2.8728  -0.6472  -0.1225   0.4936   3.2367  
+## -2.9944  -0.6366  -0.1349   0.4341   3.2151  
 ## 
 ## Coefficients:
 ##                    Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)       7.764e-04  2.454e-01   0.003 0.997476    
-## popcrave          1.522e+02  8.217e+01   1.853 0.063943 .  
-## hillaryclinton    2.692e+02  1.785e+02   1.508 0.131559    
-## fuck              5.447e+01  3.867e+01   1.408 0.159004    
-## shit              1.329e+02  7.410e+01   1.793 0.072954 .  
-## musicnewsfacts    1.574e+02  1.397e+02   1.126 0.259965    
-## even             -3.625e+01  5.739e+01  -0.632 0.527591    
-## lol               8.283e+00  3.306e+01   0.251 0.802192    
-## realdonaldtrump   6.932e+01  1.169e+02   0.593 0.553068    
-## potus             2.168e+02  2.494e+02   0.869 0.384713    
-## better            9.364e+01  7.719e+01   1.213 0.225058    
-## fucking          -2.405e+01  6.774e+01  -0.355 0.722599    
-## bitch             1.824e+02  4.936e+01   3.694 0.000221 ***
-## life              1.744e+01  3.720e+01   0.469 0.639163    
-## please            1.086e+01  1.946e+01   0.558 0.576991    
-## man               9.590e+00  1.486e+01   0.645 0.518646    
-## best              2.370e+01  4.102e+01   0.578 0.563311    
-## happy            -1.467e+00  4.930e+01  -0.030 0.976263    
-## thank             6.276e+01  3.582e+01   1.752 0.079750 .  
-## yall              4.010e+01  4.168e+01   0.962 0.335996    
-## ass               6.823e+01  3.366e+01   2.027 0.042677 *  
-## well             -2.497e+00  4.881e+01  -0.051 0.959200    
-## trump            -5.815e+01  4.580e+01  -1.270 0.204217    
-## queen             6.912e+00  1.111e+01   0.622 0.533855    
-## song             -4.238e+01  3.258e+01  -1.301 0.193290    
-## music            -1.243e+02  5.517e+01  -2.253 0.024289 *  
-## hope             -1.369e+02  6.342e+01  -2.159 0.030840 *  
-## follow            4.440e+00  1.854e+01   0.240 0.810702    
-## dietcoke          7.968e+01  2.818e+01   2.828 0.004685 ** 
-## fbi               1.671e+03  2.322e+03   0.720 0.471753    
-## black             2.332e+02  7.869e+01   2.963 0.003044 ** 
-## lmao              5.577e+01  3.834e+01   1.455 0.145738    
-## great            -7.432e+00  5.689e+01  -0.131 0.896068    
-## nytimes           1.068e+03  9.459e+02   1.129 0.258942    
-## rihanna           2.775e+01  9.159e+01   0.303 0.761913    
-## white             2.732e+02  1.055e+02   2.590 0.009586 ** 
-## nbcnews          -8.494e+03  1.847e+04  -0.460 0.645690    
-## nydailynews       5.945e+03  2.675e+05   0.022 0.982270    
-## liltunechi       -1.916e+01  3.455e+02  -0.055 0.955779    
-## damn              5.034e+01  7.969e+01   0.632 0.527609    
-## money             8.686e+01  1.637e+02   0.531 0.595644    
-## nas              -8.532e+01  6.280e+01  -1.359 0.174276    
-## stan             -4.649e+00  4.195e+01  -0.111 0.911762    
-## beautiful        -1.263e+02  5.676e+01  -2.225 0.026070 *  
-## hell              4.790e+01  2.454e+01   1.952 0.050979 .  
-## legend            4.691e+02  1.237e+02   3.791 0.000150 ***
-## noreaga           6.520e+03  5.417e+05   0.012 0.990397    
-## X50cent           1.410e+04  8.733e+05   0.016 0.987123    
-## thegame           2.986e+03  1.347e+04   0.222 0.824503    
-## miss             -1.179e+02  5.129e+01  -2.298 0.021585 *  
-## birdman5star      7.364e+03  5.543e+05   0.013 0.989400    
-## hillary          -1.297e+02  1.089e+02  -1.191 0.233590    
-## mean             -5.748e+01  7.640e+01  -0.752 0.451858    
-## meekmill          2.322e+03  3.137e+03   0.740 0.459149    
-## always           -4.902e+01  5.205e+01  -0.942 0.346269    
-## taylornation13   -1.412e+03  5.841e+02  -2.418 0.015624 *  
-## birthday         -5.916e+01  6.501e+01  -0.910 0.362841    
-## thanks           -1.042e+02  6.375e+01  -1.635 0.102143    
-## night            -1.643e+01  3.825e+01  -0.430 0.667453    
-## wait              3.198e+00  4.570e+01   0.070 0.944212    
-## taylorswift      -5.529e+01  1.365e+01  -4.050 5.12e-05 ***
-## morning          -9.036e+01  8.768e+01  -1.031 0.302752    
-## amazing           2.807e+01  5.902e+01   0.476 0.634321    
-## quote            -1.875e+01  8.624e+01  -0.217 0.827926    
-## world            -6.434e+01  4.369e+01  -1.473 0.140812    
-## heart            -2.314e+01  3.524e+01  -0.657 0.511466    
-## via              -3.852e+01  4.324e+01  -0.891 0.372970    
-## guys             -1.114e+02  7.867e+01  -1.416 0.156875    
-## haha             -1.016e+02  8.370e+01  -1.213 0.225003    
-## hahaha            9.558e+01  1.430e+02   0.669 0.503798    
-## bless            -1.048e+02  1.077e+02  -0.973 0.330452    
-## wish              4.947e+00  5.081e+01   0.097 0.922436    
-## cute             -7.759e+01  6.706e+01  -1.157 0.247296    
-## fun               5.042e+01  6.918e+01   0.729 0.466092    
-## friend           -9.455e+01  6.267e+01  -1.509 0.131382    
-## ariastaylorswift  4.811e+01  1.877e+01   2.564 0.010358 *  
-## lang             -1.899e+02  1.074e+02  -1.769 0.076950 .  
-## praying          -3.016e+02  3.029e+02  -0.996 0.319395    
-## excited          -8.595e+01  1.477e+02  -0.582 0.560514    
-## fan              -4.718e+01  3.887e+01  -1.214 0.224879    
-## protect           4.008e+02  2.977e+02   1.346 0.178192    
-## ts6              -2.820e+02  1.186e+02  -2.377 0.017459 *  
-## awesome          -1.644e+02  9.437e+01  -1.742 0.081507 .  
-## shawnmendes      -1.378e+01  3.927e+01  -0.351 0.725635    
-## sweet             4.792e+01  9.949e+01   0.482 0.630069    
+## (Intercept)      -3.798e-01  2.920e-01  -1.301 0.193345    
+## popcrave          1.540e+02  8.334e+01   1.848 0.064595 .  
+## hillaryclinton    2.769e+02  1.787e+02   1.550 0.121180    
+## fuck              5.645e+01  3.777e+01   1.495 0.135034    
+## shit              1.439e+02  7.379e+01   1.949 0.051237 .  
+## musicnewsfacts    1.446e+02  1.367e+02   1.058 0.290021    
+## even             -2.036e+01  5.867e+01  -0.347 0.728576    
+## lol               1.383e+01  3.309e+01   0.418 0.675888    
+## realdonaldtrump   7.117e+01  1.162e+02   0.613 0.540055    
+## potus             2.056e+02  2.475e+02   0.831 0.406154    
+## better            1.064e+02  7.793e+01   1.365 0.172191    
+## fucking          -2.211e+01  6.713e+01  -0.329 0.741856    
+## bitch             1.855e+02  5.082e+01   3.650 0.000262 ***
+## life              2.574e+01  3.678e+01   0.700 0.484025    
+## please            1.471e+01  1.902e+01   0.774 0.439073    
+## man               1.515e+01  1.512e+01   1.002 0.316442    
+## best              2.653e+01  4.128e+01   0.643 0.520378    
+## happy             5.420e-01  4.926e+01   0.011 0.991220    
+## thank             6.470e+01  3.605e+01   1.794 0.072737 .  
+## yall              4.507e+01  4.077e+01   1.105 0.269008    
+## ass               8.101e+01  3.414e+01   2.373 0.017663 *  
+## well              5.473e+00  4.904e+01   0.112 0.911132    
+## trump            -5.432e+01  4.603e+01  -1.180 0.237900    
+## queen             7.888e+00  1.164e+01   0.678 0.497813    
+## song             -3.904e+01  3.265e+01  -1.196 0.231812    
+## music            -1.119e+02  5.490e+01  -2.038 0.041503 *  
+## hope             -1.326e+02  6.385e+01  -2.077 0.037798 *  
+## follow            4.213e+00  1.830e+01   0.230 0.817953    
+## dietcoke          7.805e+01  2.828e+01   2.760 0.005776 ** 
+## fbi               1.658e+03  2.128e+03   0.779 0.435785    
+## black             2.343e+02  7.893e+01   2.969 0.002989 ** 
+## lmao              5.750e+01  3.837e+01   1.499 0.133929    
+## great            -2.881e+00  5.683e+01  -0.051 0.959571    
+## nytimes           1.036e+03  9.206e+02   1.125 0.260554    
+## rihanna           3.468e+01  9.161e+01   0.379 0.705047    
+## white             2.751e+02  1.087e+02   2.530 0.011415 *  
+## nbcnews          -8.502e+03  1.838e+04  -0.463 0.643655    
+## nydailynews       6.009e+03  2.675e+05   0.022 0.982078    
+## liltunechi       -2.847e+01  3.485e+02  -0.082 0.934889    
+## damn              4.969e+01  7.914e+01   0.628 0.530142    
+## money             1.071e+02  1.632e+02   0.656 0.511951    
+## nas              -6.207e+01  6.222e+01  -0.998 0.318462    
+## stan             -2.356e+00  3.939e+01  -0.060 0.952302    
+## beautiful        -1.226e+02  5.748e+01  -2.132 0.032975 *  
+## hell              5.064e+01  2.460e+01   2.058 0.039546 *  
+## legend            4.623e+02  1.240e+02   3.728 0.000193 ***
+## noreaga           6.486e+03  5.424e+05   0.012 0.990458    
+## X50cent           1.424e+04  8.848e+05   0.016 0.987160    
+## thegame           2.966e+03  1.343e+04   0.221 0.825204    
+## miss             -1.156e+02  5.194e+01  -2.226 0.025996 *  
+## birdman5star      7.323e+03  5.550e+05   0.013 0.989472    
+## hillary          -1.325e+02  1.090e+02  -1.216 0.224145    
+## mean             -3.795e+01  7.497e+01  -0.506 0.612737    
+## meekmill          2.436e+03  3.117e+03   0.782 0.434427    
+## always           -4.483e+01  5.165e+01  -0.868 0.385442    
+## taylornation13   -1.405e+03  5.839e+02  -2.406 0.016148 *  
+## birthday         -5.411e+01  6.486e+01  -0.834 0.404142    
+## thanks           -1.022e+02  6.410e+01  -1.595 0.110779    
+## night            -1.239e+01  3.817e+01  -0.324 0.745567    
+## wait              5.829e+00  4.622e+01   0.126 0.899633    
+## taylorswift      -5.249e+01  1.382e+01  -3.797 0.000146 ***
+## morning          -7.729e+01  8.613e+01  -0.897 0.369525    
+## amazing           3.093e+01  5.875e+01   0.526 0.598612    
+## quote            -2.196e+01  8.695e+01  -0.253 0.800639    
+## world            -6.256e+01  4.436e+01  -1.410 0.158459    
+## heart            -1.492e+01  3.552e+01  -0.420 0.674425    
+## via              -2.909e+01  4.279e+01  -0.680 0.496543    
+## guys             -1.005e+02  7.811e+01  -1.286 0.198375    
+## haha             -1.050e+02  8.468e+01  -1.239 0.215185    
+## hahaha            1.048e+02  1.439e+02   0.728 0.466557    
+## bless            -1.096e+02  1.064e+02  -1.030 0.303078    
+## wish              8.835e+00  5.291e+01   0.167 0.867379    
+## cute             -7.077e+01  6.872e+01  -1.030 0.303038    
+## fun               6.063e+01  7.533e+01   0.805 0.420913    
+## friend           -8.628e+01  6.110e+01  -1.412 0.157960    
+## ariastaylorswift  4.648e+01  1.869e+01   2.487 0.012886 *  
+## lang             -1.855e+02  1.071e+02  -1.733 0.083109 .  
+## praying          -3.123e+02  3.041e+02  -1.027 0.304426    
+## excited          -8.336e+01  1.471e+02  -0.566 0.571063    
+## fan              -4.102e+01  3.877e+01  -1.058 0.289982    
+## protect           4.209e+02  3.000e+02   1.403 0.160676    
+## ts6              -2.702e+02  1.188e+02  -2.274 0.022950 *  
+## awesome          -1.590e+02  9.440e+01  -1.684 0.092187 .  
+## shawnmendes      -1.093e+01  3.819e+01  -0.286 0.774732    
+## sweet             4.876e+01  9.955e+01   0.490 0.624301    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 1047.75  on 799  degrees of freedom
-## Residual deviance:  606.12  on 715  degrees of freedom
-## AIC: 776.12
+##     Null deviance: 1014.55  on 780  degrees of freedom
+## Residual deviance:  578.08  on 696  degrees of freedom
+## AIC: 748.08
 ## 
 ## Number of Fisher Scoring iterations: 18</code></pre>
 <pre class="r"><code>set.seed(1)
 cv.logit &lt;- cv.glm(data,fit.logit,K=10)$delta</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
 ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type =
 ## ifelse(type == : prediction from a rank-deficient fit may be misleading
@@ -876,21 +867,29 @@ cv.logit &lt;- cv.glm(data,fit.logit,K=10)$delta</code></pre>
 ## ifelse(type == : prediction from a rank-deficient fit may be misleading</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type =
-## ifelse(type == : prediction from a rank-deficient fit may be misleading
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type =
-## ifelse(type == : prediction from a rank-deficient fit may be misleading</code></pre>
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>cv.logit</code></pre>
-<pre><code>## [1] 0.1830305 0.1792305</code></pre>
+<pre><code>## [1] 0.1807030 0.1768848</code></pre>
 <pre class="r"><code>data.select &lt;- data[,c(&quot;y&quot;,&quot;popcrave&quot;,&quot;shit&quot;,&quot;bitch&quot;,&quot;thank&quot;,&quot;ass&quot;,&quot;music&quot;,&quot;hope&quot;,&quot;dietcoke&quot;,&quot;black&quot;,&quot;white&quot;,&quot;beautiful&quot;,&quot;hell&quot;,&quot;legend&quot;,&quot;miss&quot;,&quot;taylornation13&quot;,&quot;taylorswift&quot;,&quot;ariastaylorswift&quot;,&quot;lang&quot;,&quot;ts6&quot;,&quot;awesome&quot;)]
 fit.logit.select &lt;- glm(y~.,data = data.select,family = &quot;binomial&quot;)</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>set.seed(1)
 cv.logit.select &lt;- cv.glm(data.select,fit.logit.select,K=10)$delta</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
 ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
@@ -908,7 +907,7 @@ cv.logit.select &lt;- cv.glm(data.select,fit.logit.select,K=10)$delta</code></pr
 
 ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
 <pre class="r"><code>cv.logit.select</code></pre>
-<pre><code>## [1] 0.1533538 0.1526054</code></pre>
+<pre><code>## [1] 0.1480865 0.1473898</code></pre>
 </div>
 
 
